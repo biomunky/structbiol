@@ -1,0 +1,24 @@
+# structbiol
+
+use the namespace
+(:use '[structbiol.dssp])
+
+read a dssp file and obtain a DSSP. record
+(def dssp (read-dssp "resources/1hnn.dssp"))
+
+There aren't many methods at the moment.  Example -> get chains (filtered to exclude nils)
+(chain-identifiers dssp)
+> (A B) ;these a strings
+
+For the moment, you can get secondary structure and sequence using:
+(println (map (fn [x] [(:ss x) (:aa x)]) (:atoms dssp)))
+This will be for all chains and include gaps - those idenfied as '!*' by 
+dssp.  At the moment I am not sure what I am going to do with these positions,
+I can't see any use for them at the moment.
+
+
+## License
+
+Copyright (C) 2012 theVillageIdiot
+
+Distributed under the Eclipse Public License, the same as Clojure.
