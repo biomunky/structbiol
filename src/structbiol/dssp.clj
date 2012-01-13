@@ -5,28 +5,34 @@
 (defrecord DSSP [ surface-area number-of-residues
 		 number-of-chains ss-total
 		 ss-intrachain ss-interchain
-		 atoms ])
+		 residues ])
+
+(defn coords [residue]
+    [(:x-ca residue) (:y-ca residue) (:z-ca residue)])
+
+(defn get-chain [chain-id dssp]
+    (filter #(= (% :chain) chain-id) (:residues dssp)))
 
 (defn chain-idenfifiers
   "Given takes a DSSP. record and tells you the chain identifiers: A,B,C etc."
   [dssp]
   (filter (fn [x] (false? (nil? x)))
-	  (set (map #(:chain %) (:atoms dssp)))))
+	  (set (map #(:chain %) (:residues dssp)))))
 
-(defn get-atom-attribute
+(defn get-residue-attribute
     "For a collection of residues, get the requested attribute."
   [attr dssp-record]    
-  (map #( attr % ) (:atoms dssp-record))) 
+  (map #( attr % ) (:residues dssp-record))) 
 
-(defn remove-bad-atoms
+(defn remove-bad-residues
   "Given a DSSP. record, return a new record with the nils and
 undefined residues removed - all chains are processed at once"
   [dssp]
-  (assoc dssp :atoms
-  (filter #(or (false? (nil? (:ss %))) (= "X" (:aa %))) (:atoms dssp))))
+  (assoc dssp :residues
+      (filter #(not (= (:aa %) "X")) (:residues dssp))))
 
-(defn parse-atom-line
-  "Pass an atom line (string) from DSSP output and get back a hashmap of the important data.
+(defn parse-residue-line
+  "Pass an residue line (string) from DSSP output and get back a hashmap of the important data.
 If passsed something else you will get an error or crap"
   [s]
     (if (re-find #"!|\*" s) nil
@@ -52,7 +58,7 @@ If passsed something else you will get an error or crap"
 (defn read-dssp [filename]
   (try
     (with-open [rdr (reader filename)]
-      (loop [content (line-seq rdr) headers {} atoms [] in-atoms false]
+      (loop [content (line-seq rdr) headers {} residues [] in-residues false]
 	(if (empty? content)
 	  (DSSP. (:surface-area headers)
 		 (:number-of-residues headers)
@@ -60,35 +66,38 @@ If passsed something else you will get an error or crap"
 		 (:ss-total headers)
 		 (:ss-intrachain headers)
 		 (:ss-interchain headers)
-		 (reverse atoms))
+		 (reverse residues))
 	  
 	    (let [current-line (first content)]
 	      (cond
 	       (re-find #"TOTAL NUMBER OF RESIDUES" current-line) 
 	       (recur (rest content)
 		      (merge headers (parse-residues-header current-line))
-		      atoms
-		      in-atoms)
+		      residues
+		      in-residues)
 	       
 	       (re-find #"ACCESSIBLE SURFACE OF PROTEIN" current-line)
 	       (recur (rest content)
 		      (merge headers {:surface-area (Float/parseFloat
 						     (first
 						      (split (trim current-line) #"\s")))})
-		      atoms
-		      in-atoms)
+		      residues
+		      in-residues)
 	       
 	       (re-find #"  \#  RESIDUE AA" current-line)
-	       (recur (rest content) headers atoms true)
+	       (recur (rest content) headers residues true)
 	       
-	       (true? in-atoms) 
+	       (re-find #".*!\*" current-line)
+	       (recur (rest content) headers residues in-residues)
+	       
+	       (true? in-residues) 
 	       (recur (rest content) 
 		      headers
-		      (cons (parse-atom-line current-line) atoms) 
-		      in-atoms)
+		      (cons (parse-residue-line current-line) residues) 
+		      in-residues)
 	       
 	       :else (recur (rest content)
 			    headers 
-			    atoms
-			    in-atoms))))))
+			    residues
+			    in-residues))))))
     (catch Exception e (throw e))))
