@@ -1,8 +1,8 @@
 (ns structbiol.dssp
-    (:use [clojure.java.io :only [reader writer]]
-          [clojure.string :only [trim split join]]
-	  [structbiol.utils :only [create-directory]])
-    (:import (java.io File)))
+  (:use [clojure.java.io :only [reader writer]]
+	[clojure.string :only [trim split join]]
+	[structbiol.utils :only [create-directory]])
+  (:import (java.io File)))
 
 (defrecord DSSP [ surface-area number-of-residues
 		 number-of-chains ss-total
@@ -10,10 +10,10 @@
 		 residues ])
 
 (defn coords [residue]
-    [(:x-ca residue) (:y-ca residue) (:z-ca residue)])
+  [(:x-ca residue) (:y-ca residue) (:z-ca residue)])
 
 (defn get-chain [chain-id dssp]
-    (filter #(= (% :chain) chain-id) (:residues dssp)))
+  (filter #(= (% :chain) chain-id) (:residues dssp)))
 
 (defn chuck-chain-by-structure [chain-id dssp]
   (loop [chain (get-chain chain-id dssp) substructures {} counter 0]
@@ -33,8 +33,8 @@
 	   :else 
 	   (do (println "!") (recur (rest chain) substructures (inc counter))))))))
 
-; for a chunked chain, get structures matching [x or others ]
-; should chunk the chain itself
+					; for a chunked chain, get structures matching [x or others ]
+					; should chunk the chain itself
 
 (defn chain-idenfifiers
   "Given takes a DSSP. record and tells you the chain identifiers: A,B,C etc."
@@ -90,7 +90,6 @@ If passsed something else you will get an error or crap"
 		 (:ss-intrachain headers)
 		 (:ss-interchain headers)
 		 (reverse residues))
-	  
 	  (let [current-line (first content)]
 	    (cond
 	     (re-find #"TOTAL NUMBER OF RESIDUES" current-line) 

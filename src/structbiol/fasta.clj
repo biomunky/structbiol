@@ -8,9 +8,9 @@
 	  (let [line (first content)]
 	    (cond
 	     (re-find #"^>.*" line ) (recur (rest content)
-					    												line
-					    												sequences)
+					    line
+					    sequences)
 	     :else (recur (rest content)
-			  						current-header
-			  						(assoc sequences current-header (str (sequences current-header nil) line)))))))))
+			  current-header
+			  (assoc sequences current-header (str (sequences current-header nil) line)))))))))
 

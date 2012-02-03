@@ -19,17 +19,14 @@
 
 (def seqres-string "SEQRES   4 A    3  ASN GLY PRO")
 
-(def sample-seqres {
-		    :chain "A"
+(def sample-seqres {:chain "A"
 		    :number-of-residues 3
-		    :residues ["ASN" "GLY" "PRO"]
-		    })
+		    :residues ["ASN" "GLY" "PRO"]})
 
 (def dbref-string "DBREF  1HNN A    1   282  UNP    P11086   PNMT_HUMAN       1    282")
 
 (def sample-dbref
-     {                           
-      :id-code            "1HNN"   
+     {:id-code            "1HNN"   
       :chain              "A"  
       :seq-start          1  
       :insertion-start    nil  
