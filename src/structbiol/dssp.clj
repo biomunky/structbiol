@@ -36,10 +36,10 @@
 (defn write-chunks-to-file [chain-id dssp filename]
   (def output-dir "chunks/")
   (create-directory output-dir)
-  (def chunks (chunk-chain-by-structure chain-id dssp))
+  (def structure-chunks (chunk-chain-by-structure chain-id dssp))
   (with-open [wtr (writer (str output-dir filename))]
     (.write wtr "chunkID, ssType, #elements\n" )
-    (doall (for [[chunk-id residues] chunks]
+    (doall (for [[chunk-id residues] structure-chunks]
 	     (.write wtr (str chunk-id " " (:ss (first residues)) " " (count residues)  "\n"))))))
 
 (defn chains
