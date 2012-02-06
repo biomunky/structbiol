@@ -7,15 +7,22 @@ read a dssp file and obtain a DSSP. record
 (def dssp (read-dssp "resources/1hnn.dssp"))
 
 There aren't many methods at the moment.  Example -> get chains (filtered to exclude nils)
-(chain-identifiers dssp)
+(chains dssp)
 > (A B) ;these a strings
 
-For the moment, you can get secondary structure and sequence using:
-(println (map (fn [x] [(:ss x) (:aa x)]) (:atoms dssp)))
-This will be for all chains and include gaps - those idenfied as '!*' by 
-dssp.  At the moment I am not sure what I am going to do with these positions,
-I can't see any use for them at the moment.
+Can break a chain up based on blocks of secondary structure -> H,I,G,E,B,S,T,- (other)
 
+(chunk-chain-by-structure "A" (remove-bad-residues (read-dssp "fullpath-to-file")))
+
+# The above is shown in core.clj
+# core.clj is essentially of no use to anyone other than me - unless you change the directory
+# to point at a local collection of dssp files
+
+######################
+#                    #
+# THIS IS VERY HACKY #
+#                    #
+######################
 
 ## License
 
