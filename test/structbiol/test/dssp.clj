@@ -17,7 +17,7 @@
 								:z-ca :kappa :alpha :phi :psi] ))
 
 (deftest test-chunk-chain-by-structure
-  (def chunks (chuck-chain-by-structure "A" (read-dssp "resources/1bn6.dssp")))
+  (def chunks (chunk-chain-by-structure "A" (read-dssp "resources/1bn6.dssp")))
   (is (= (count chunks) 83))
   (is (= (count (filter #(=  ((first %) :ss) "H" ) (vals chunks) )) 12 ))
   (is (= (count (filter #(=  ((first %) :ss) "G" ) (vals chunks) ))  7 ))
@@ -50,4 +50,4 @@
 
 (deftest test-chain-identifiers
   (def dssp (read-dssp "resources/1hnn.dssp"))
-  (is (= (chain-idenfifiers dssp) '("A" "B"))))
+  (is (= (chains dssp) '("A" "B"))))

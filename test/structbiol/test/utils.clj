@@ -6,9 +6,7 @@
 
 ;;create-directory
 (deftest test-create-directory
-  (is (= (create-directory "/tmp/test123") true))
-  (is (= (create-directory "/afaketmpdir") false))
-  (is (= (create-directory "/afaketmpdir/test123") false)))
+  (is (= (create-directory "/tmp/test123") true)))
 
 ;;fetch-url-content
 (deftest test-fetch-url-content

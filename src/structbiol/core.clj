@@ -1,20 +1,18 @@
 (ns structbiol.core
   (:gen-class)
   (:use [structbiol.dssp]
-	[structbiol.pdb]
-	[clojure.contrib.math :only [expt sqrt]]))
+		[structbiol.pdb]
+		[clojure.contrib.math :only [expt sqrt]])
+	(:import (java.io File)))
 
 (defn -main [& args]
-  (def chain
-       (get-chain "B" (remove-bad-residues (read-dssp "resources/1hnn.dssp"))))
-  
-  (def d (read-dssp "resources/1dot.dssp"))
-  (def chunked (chuck-chain-by-structure "A" d))
-  
-  (doall (for [i (sort (keys chunked))]
-	   (println i (count (chunked i)) ((first (chunked i)) :ss))))
-  
-  (fetch-dssp-file "s1hnn")
-  (fetch-dssp-file "3chy")
-  
+  (def dssp-dir (File. "/Users/biomunky/Dropbox/postdoc/data-analysis/dssp"))
+	
+	(doall (for [f (.listFiles dssp-dir)]
+		(let [d-file (read-dssp (str (.getAbsoluteFile f)))
+					cs     (chains d-file)]
+		(if (= 1 (count cs))
+			(do (println "Chunking" (.getName f))
+					(write-chunks-to-file (first cs) (remove-bad-residues d-file) (.getName f)))))))
+					
   (flush))

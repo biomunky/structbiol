@@ -15,7 +15,7 @@
 (defn get-chain [chain-id dssp]
   (filter #(= (% :chain) chain-id) (:residues dssp)))
 
-(defn chuck-chain-by-structure [chain-id dssp]
+(defn chunk-chain-by-structure [chain-id dssp]
   (loop [chain (get-chain chain-id dssp) substructures {} counter 0]
     (if (empty? chain) substructures
 	(let [residue (first chain)]
@@ -31,12 +31,18 @@
 		  (assoc substructures (inc counter) [residue] )
 		  (inc counter))	   
 	   :else 
-	   (do (println "!") (recur (rest chain) substructures (inc counter))))))))
+	   (recur (rest chain) substructures (inc counter)))))))
 
-					; for a chunked chain, get structures matching [x or others ]
-					; should chunk the chain itself
+(defn write-chunks-to-file [chain-id dssp filename]
+  (def output-dir "chunks/")
+  (create-directory output-dir)
+  (def chunks (chunk-chain-by-structure chain-id dssp))
+  (with-open [wtr (writer (str output-dir filename))]
+    (.write wtr "chunkID, ssType, #elements\n" )
+    (doall (for [[chunk-id residues] chunks]
+	     (.write wtr (str chunk-id " " (:ss (first residues)) " " (count residues)  "\n"))))))
 
-(defn chain-idenfifiers
+(defn chains
   "Given takes a DSSP. record and tells you the chain identifiers: A,B,C etc."
   [dssp]
   (filter (fn [x] (false? (nil? x)))
@@ -48,12 +54,11 @@
   (map #( attr % ) (:residues dssp-record))) 
 
 (defn remove-bad-residues
-  "Given a DSSP. record, return a new record with the nils and
-undefined residues removed - all chains are processed at once"
+  "Remove missing residues and those that are not one of the 'real' residues. Not done on parsing because I may want them later"
   [dssp]
   (assoc dssp :residues
-	 (filter #(not (= (:aa %) "X")) (:residues dssp))))
-
+	 (filter #(or (not (nil? (:ss %))) (= (:aa %) "X")) (:residues dssp))))	
+	
 (defn parse-residue-line
   "Pass an residue line (string) from DSSP output and get back a hashmap of the important data.
 If passsed something else you will get an error or crap"
@@ -92,32 +97,21 @@ If passsed something else you will get an error or crap"
 		 (reverse residues))
 	  (let [current-line (first content)]
 	    (cond
-	     (re-find #"TOTAL NUMBER OF RESIDUES" current-line) 
-	     (recur (rest content)
-		    (merge headers (parse-residues-header current-line))
-		    residues
-		    in-residues)
-	     
-	     (re-find #"ACCESSIBLE SURFACE OF PROTEIN" current-line)
-	     (recur (rest content)
-		    (merge headers {:surface-area (Float/parseFloat
-						   (first
-						    (split (trim current-line) #"\s")))})
-		    residues
-		    in-residues)
-	     
-	     (re-find #"  \#  RESIDUE AA" current-line)
-	     (recur (rest content) headers residues true)
-	     
-	     (re-find #".*!\*" current-line)
-	     (recur (rest content) headers residues in-residues)
-	     
-	     (true? in-residues) 
-	     (recur (rest content) 
-		    headers
-		    (cons (parse-residue-line current-line) residues) 
-		    in-residues)
-	     
+	     (re-find #"TOTAL NUMBER OF RESIDUES" current-line) (recur (rest content)
+								       (merge headers (parse-residues-header current-line))
+								       residues
+								       in-residues)
+	     (re-find #"ACCESSIBLE SURFACE OF PROTEIN" current-line) (recur (rest content)
+									    (merge headers {:surface-area (Float/parseFloat
+													   (first (split (trim current-line) #"\s")))})
+									    residues
+									    in-residues)
+	     (re-find #"  \#  RESIDUE AA" current-line) (recur (rest content) headers residues true)
+	     (re-find #".*!\*" current-line) (recur (rest content) headers residues in-residues)
+	     (true? in-residues) (recur (rest content) 
+					headers
+					(cons (parse-residue-line current-line) residues) 
+					in-residues)
 	     :else (recur (rest content)
 			  headers 
 			  residues
@@ -145,6 +139,3 @@ If passsed something else you will get an error or crap"
 	(.close in)
 	(.close out))
       (catch Exception e (println "Couldn't get the data for" id )))))
-
-
-
